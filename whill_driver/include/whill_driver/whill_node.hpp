@@ -15,9 +15,21 @@
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_components/register_node_macro.hpp"
 
+#include "nav_msgs/msg/odometry.hpp"
+#include "geometry_msgs/msg/transform_stamped.hpp"
+#include "geometry_msgs/msg/pose_with_covariance_stamped.hpp"
+#include "geometry_msgs/msg/pose_with_covariance.hpp"
+#include "geometry_msgs/msg/pose.hpp"
+#include "geometry_msgs/msg/quaternion.hpp"
+#include "geometry_msgs/msg/point.hpp"
+#include "geometry_msgs/msg/vector3.hpp"
+#include "geometry_msgs/msg/twist_with_covariance_stamped.hpp"
+#include "geometry_msgs/msg/twist_with_covariance.hpp"
 #include "geometry_msgs/msg/twist.hpp"
 #include "std_msgs/msg/string.hpp"
 #include "sensor_msgs/msg/joy.hpp"
+#include "sensor_msgs/msg/joint_state.hpp"
+#include "tf2_ros/transform_broadcaster.h"
 #include "whill_msgs/msg/model_cr2_state.hpp"
 #include "whill_msgs/srv/set_battery_voltage_out.hpp"
 #include "whill_msgs/srv/set_power.hpp"
@@ -39,6 +51,11 @@ public:
   RCLCPP_PUBLIC
   ~WhillNode();
 
+  // wheel radius [m]
+  const double wheel_radius = 0.1325;
+  // wheel tread [m]
+  const double wheel_tread = 0.496;
+
 private:
   void Initialize();
   std::shared_ptr<model_cr2::Whill> whill_;
@@ -52,6 +69,16 @@ private:
 
   void OnControllerCmdVel(const geometry_msgs::msg::Twist::SharedPtr cmd_vel);
   rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr controller_cmd_vel_sub_;
+
+  // rclcpp::Publisher<sensor_msgs::msg::Joy>::SharedPtr joystick_pub_;
+  rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr states_joint_pub_;
+  rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr states_odom_pub_;
+  std::shared_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
+
+  // void OnJoy(const sensor_msgs::msg::Joy::SharedPtr joy);
+  // void OnCmdVel(const geometry_msgs::msg::Twist::SharedPtr cmd_vel);
+  void OnOdometry(const nav_msgs::msg::Odometry::SharedPtr odom);
+  void OnWhillCallbackData1(const whill_msgs::msg::ModelCr2State::SharedPtr msg);
 
   void OnSetPowerSrv(
     const std::shared_ptr<rmw_request_id_t> request_header,

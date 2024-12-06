@@ -23,6 +23,7 @@ setup(
     entry_points={
         'console_scripts': [
             'turn_demo_client = whill_examples.whill_examples_turn:main',
+            'whill_move = whill_examples.whill_move:main',
         ],
     },
 )
