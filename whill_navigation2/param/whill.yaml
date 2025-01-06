@@ -13,9 +13,9 @@ amcl:
     do_beamskip: false
     global_frame_id: "map"
     lambda_short: 0.1
-    laser_likelihood_max_dist: 2.0
-    laser_max_range: 100.0
-    laser_min_range: -1.0
+    laser_likelihood_max_dist: 2.0   # 障害物検出距離を適切に調整
+    laser_max_range: 15.0  # 100.0 # RPLiDAR a2m8は検出距離範囲: 0m ~ 12m
+    laser_min_range: 0.1 # LIDARの最小距離。負の値を適切な最小距離に修正。0.1以上に設定。 # -1.0
     laser_model_type: "likelihood_field"
     max_beams: 60
     max_particles: 2000
@@ -126,38 +126,38 @@ controller_server:
       debug_trajectory_details: True
       min_vel_x: 0.0
       min_vel_y: 0.0
-      max_vel_x: 0.22
+      max_vel_x: 0.18 # 0.22
       max_vel_y: 0.0
-      max_vel_theta: 1.0
+      max_vel_theta: 0.5 # 1.0  # 回転速度を抑えて、より安定した回転を実現。
       min_speed_xy: 0.0
       max_speed_xy: 0.22
       min_speed_theta: 0.0
-      acc_lim_x: 2.5
+      acc_lim_x: 1.0  # 2.5
       acc_lim_y: 0.0
-      acc_lim_theta: 3.2
-      decel_lim_x: -2.5
+      acc_lim_theta: 1.5  # 3.2
+      decel_lim_x: -1.0  # -2.5
       decel_lim_y: 0.0
-      decel_lim_theta: -3.2
+      decel_lim_theta: -2.5  # -3.2
       vx_samples: 20
       vy_samples: 0
       vtheta_samples: 40
       sim_time: 1.5
-      linear_granularity: 0.05
-      angular_granularity: 0.025
+      linear_granularity: 0.1  #0.05  # より滑らかな直線経路を作る
+      angular_granularity: 0.05  # 0.025 # より細かく回転を計画する
       transform_tolerance: 0.2
       xy_goal_tolerance: 0.05
-      trans_stopped_velocity: 0.25
+      trans_stopped_velocity: 0.1  #0.25
       short_circuit_trajectory_evaluation: True
       stateful: True
       critics: ["RotateToGoal", "Oscillation", "BaseObstacle", "GoalAlign", "PathAlign", "PathDist", "GoalDist"]
-      BaseObstacle.scale: 0.02
+      BaseObstacle.scale: 0.05  # 0.02 # 障害物回避の感度を増加させ、障害物に対してより敏感に反応する。 
       PathAlign.scale: 32.0
       PathAlign.forward_point_distance: 0.1
-      GoalAlign.scale: 24.0
+      GoalAlign.scale: 16.0  # 目標位置へのアラインメントを滑らかにする(元24.0) 
       GoalAlign.forward_point_distance: 0.1
       PathDist.scale: 32.0
       GoalDist.scale: 24.0
-      RotateToGoal.scale: 32.0
+      RotateToGoal.scale: 20.0 # 32.0 # 回転時の急激な動きを抑える
       RotateToGoal.slowing_factor: 5.0
       RotateToGoal.lookahead_time: -1.0
       
@@ -177,11 +177,11 @@ local_costmap:
       width: 3
       height: 3
       resolution: 0.05
-      robot_radius: 0.1
+      robot_radius: 0.28  # 0.1 # ロボットの半径を0.75に修正。WHILLの縦の長さは0.9
       plugins: ["obstacle_layer", "voxel_layer", "inflation_layer"]
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
-        inflation_radius: 1.0
+        inflation_radius: 1.0 #1.0 # WHILLに合わせて少し広めに設定、障害物との衝突回避のため。
         cost_scaling_factor: 3.0
       obstacle_layer:
         plugin: "nav2_costmap_2d::ObstacleLayer"
@@ -211,7 +211,7 @@ local_costmap:
           data_type: "LaserScan"
           raytrace_max_range: 3.0
           raytrace_min_range: 0.0
-          obstacle_max_range: 2.5
+          obstacle_max_range: 2.5 # 障害物の検出範囲。ロボットが大きいので、障害物検出範囲を広げる必要がある。
           obstacle_min_range: 0.0
       static_layer:
         map_subscribe_transient_local: True
