@@ -35,10 +35,11 @@ def generate_launch_description():
 
     resolution = LaunchConfiguration('resolution', default='0.05')
     publish_period_sec = LaunchConfiguration('publish_period_sec', default='1.0')
-
-    rviz_config_dir = os.path.join(get_package_share_directory('whill_cartographer'),
-                                   'rviz', 'whill_cartographer.rviz')
-
+    default_rviz_config_dir = os.path.join(
+                                            get_package_share_directory('whill_cartographer'),'rviz', 
+                                            'whill_cartographer.rviz')
+    rviz_config_dir = LaunchConfiguration('rviz_config_dir', 
+                                            default=default_rviz_config_dir)
     return LaunchDescription([
         DeclareLaunchArgument(
             'cartographer_config_dir',
@@ -52,7 +53,10 @@ def generate_launch_description():
             'use_sim_time',
             default_value='false',
             description='Use simulation (Gazebo) clock if true'),
-
+        DeclareLaunchArgument(
+            'rviz_config_dir',
+            default_value=default_rviz_config_dir,
+            description='Name of RViz config Directory'),
         Node(
             package='cartographer_ros',
             executable='cartographer_node',
