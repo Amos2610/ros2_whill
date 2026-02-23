@@ -2,14 +2,14 @@
 <robot name="whill_model_cr2">
 
     <link name="base_link">
-        <visual>
+        <!-- <visual>
             <geometry>
                 <cylinder length="0.2" radius="0.01"/>
             </geometry>
             <material name="blue">
                 <color rgba="0.0 0.0 1.0 1.0"/>
             </material>
-        </visual>
+        </visual> -->
     </link>
 
     <link name="base_floor">
@@ -39,6 +39,8 @@
         <parent link="base_link" />
         <child link="base_floor" />
         <origin xyz="0.3 0 0" rpy="0 0 0"/>
+        <!-- base_floorとbase_linkは同じ場所に -->
+        <!-- <origin xyz="0 0 0" rpy="0 0 0"/> -->
     </joint>
 
     <link name="left_wheel">
@@ -66,8 +68,8 @@
     <joint name="left_wheel_joint" type="continuous">
         <parent link="base_floor" />
         <child link="left_wheel" />
-        <origin xyz="-0.3 0.260 0.015" rpy="1.571 0 0" />
-        <axis xyz="0 0 1" />
+        <origin xyz="-0.330 0.235 0" rpy="0 0 0"/>  <!-- <origin xyz="-0.330 -0.235 0" rpy="-1.571 0 0" /> -->
+        <axis xyz="0 1 0" />   <!-- <axis xyz="0 0 -1" /> 回転する向きをz軸回転からy軸回転に変更-->
     </joint>
 
     <link name="right_wheel">
@@ -96,8 +98,8 @@
     <joint name="right_wheel_joint" type="continuous">
         <parent link="base_floor" />
         <child link="right_wheel" />
-        <origin xyz="-0.3 -0.260 0.015" rpy="-1.571 0 0" />
-        <axis xyz="0 0 -1" />
+         <origin xyz="-0.330 -0.235 0" rpy="0 0 0"/>  <!-- <origin xyz="-0.330 -0.235 0" rpy="1.571 0 0" /> -->
+        <axis xyz="0 1 0" />   <!-- <axis xyz="0 0 1" /> 回転する向きをz軸回転からy軸回転に変更-->
     </joint>
 
     <link name="left_front_wheel">
@@ -126,8 +128,8 @@
     <joint name="left_front_wheel_joint" type="continuous">
         <parent link="base_floor" />
         <child link="left_front_wheel" />
-        <origin xyz="0.330 -0.235 0" rpy="-1.571 0 0" />
-        <axis xyz="0 0 -1" />
+        <origin xyz="0.330 0.235 0" rpy="0 0 0"/>  <!-- <origin xyz="0.330 -0.235 0" rpy="-1.571 0 0" /> -->
+        <axis xyz="0 1 0" />   <!-- <axis xyz="0 0 -1" /> 回転する向きをz軸回転からy軸回転に変更-->
     </joint>
 
     <link name="right_front_wheel">
@@ -156,8 +158,8 @@
     <joint name="right_front_wheel_joint" type="continuous">
         <parent link="base_floor" />
         <child link="right_front_wheel"/>
-        <origin xyz="0.330 0.235 0" rpy="1.571 0 0" />
-        <axis xyz="0 0 1" />
+        <origin xyz="0.330 -0.235 0" rpy="0 0 0"/>  <!-- <origin xyz="0.330 -0.235 0" rpy="1.571 0 0" /> -->
+        <axis xyz="0 1 0" />   <!-- <axis xyz="0 0 1" /> 回転する向きをz軸回転からy軸回転に変更-->
     </joint>
 
     <link name="seat">
@@ -263,14 +265,14 @@
     </joint>
 
     <link name="left_arm">
-        <visual>
+        <!-- <visual>
             <geometry>
                 <box size="0.09 0.07 0.535"/>
             </geometry>
             <material name="grey">
                 <color rgba="0.5 0.5 0.5 1.0"/>
             </material>
-        </visual>
+        </visual> -->
         <collision>
             <geometry>
                 <box size="0.09 0.07 0.535"/>
@@ -285,14 +287,14 @@
     </joint>
 
     <link name="right_arm">
-        <visual>
+        <!-- <visual>
             <geometry>
                 <box size="0.09 0.07 0.535"/>
             </geometry>
             <material name="grey">
                 <color rgba="0.5 0.5 0.5 1.0"/>
             </material>
-        </visual>
+        </visual> -->
         <collision>
             <geometry>
                 <box size="0.09 0.07 0.535"/>
@@ -305,4 +307,27 @@
         <child link="right_arm" />
         <origin xyz="0 -0.245 0.30" rpy="0 1.0 0"/>
     </joint>
+
+    <link name="laser">
+        <visual>
+            <geometry>
+                <cylinder radius="0.035" length="0.03"/>
+            </geometry>
+            <material name="black">
+                <color rgba="0.1 0.1 0.1 1.0"/>
+            </material>
+        </visual>
+        <collision>
+            <geometry>
+                <cylinder radius="0.035" length="0.03"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <joint name="laser_joint" type="fixed">
+        <parent link="base_floor"/>
+        <child link="laser"/>
+        <origin xyz="0.40 0 0.30" rpy="0 0 0"/>
+    </joint>
+
 </robot>

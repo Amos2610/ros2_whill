@@ -14,10 +14,10 @@ amcl:
     global_frame_id: "map"
     lambda_short: 0.1
     laser_likelihood_max_dist: 2.0   # 障害物検出距離を適切に調整
-    laser_max_range: 15.0  # 100.0 # RPLiDAR a2m8は検出距離範囲: 0m ~ 12m
-    laser_min_range: 0.1 # LIDARの最小距離。負の値を適切な最小距離に修正。0.1以上に設定。 # -1.0
+    laser_max_range: 30.0  # 15.0 # RPLiDAR a2m8は検出距離範囲: 0m ~ 12m
+    laser_min_range: 0.05 # LIDARの最小距離。負の値を適切な最小距離に修正。0.1以上に設定。 # 0.1
     laser_model_type: "likelihood_field"
-    max_beams: 60
+    max_beams: 40 # 計算に用いる点群の割合
     max_particles: 2000
     min_particles: 500
     odom_frame_id: "odom"
@@ -37,7 +37,7 @@ amcl:
     z_max: 0.05
     z_rand: 0.5
     z_short: 0.05
-    scan_topic: scan
+    scan_topic: /scan
 
 amcl_map_client:
   ros__parameters:
@@ -99,7 +99,7 @@ bt_navigator_rclcpp_node:
 controller_server:
   ros__parameters:
     use_sim_time: False
-    controller_frequency: 10.0
+    controller_frequency: 30.0 #15
     min_x_velocity_threshold: 0.001
     min_y_velocity_threshold: 0.5
     min_theta_velocity_threshold: 0.001
@@ -126,23 +126,23 @@ controller_server:
       debug_trajectory_details: True
       min_vel_x: 0.0
       min_vel_y: 0.0
-      max_vel_x: 0.18 # 0.22
+      max_vel_x: 1.6 # 0.18 # WHILLの最高速度に合わせて調整
       max_vel_y: 0.0
-      max_vel_theta: 0.5 # 1.0  # 回転速度を抑えて、より安定した回転を実現。
+      max_vel_theta: 0.8 # 1.0  # 回転速度を抑えて、より安定した回転を実現。
       min_speed_xy: 0.0
-      max_speed_xy: 0.22
+      max_speed_xy: 1.6
       min_speed_theta: 0.0
-      acc_lim_x: 1.0  # 2.5
+      acc_lim_x: 1.0  # 0.5 # 加速度
       acc_lim_y: 0.0
-      acc_lim_theta: 1.5  # 3.2
-      decel_lim_x: -1.0  # -2.5
+      acc_lim_theta: 0.3  # 3.2
+      decel_lim_x: -1.0  # -0.5
       decel_lim_y: 0.0
-      decel_lim_theta: -2.5  # -3.2
-      vx_samples: 20
+      decel_lim_theta: -0.3  # -3.2
+      vx_samples: 100 # 30　どれくらいの段階を踏んで速度を上げるか
       vy_samples: 0
-      vtheta_samples: 40
-      sim_time: 1.5
-      linear_granularity: 0.1  #0.05  # より滑らかな直線経路を作る
+      vtheta_samples: 60 # 40
+      sim_time: 1.5  # 1.0  # シミュレーション時間を短縮して、より迅速な応答を実現。
+      linear_granularity: 0.1  #0.1  # より滑らかな直線経路を作る
       angular_granularity: 0.05  # 0.025 # より細かく回転を計画する
       transform_tolerance: 0.2
       xy_goal_tolerance: 0.05
@@ -150,14 +150,14 @@ controller_server:
       short_circuit_trajectory_evaluation: True
       stateful: True
       critics: ["RotateToGoal", "Oscillation", "BaseObstacle", "GoalAlign", "PathAlign", "PathDist", "GoalDist"]
-      BaseObstacle.scale: 0.05  # 0.02 # 障害物回避の感度を増加させ、障害物に対してより敏感に反応する。 
-      PathAlign.scale: 32.0
-      PathAlign.forward_point_distance: 0.1
-      GoalAlign.scale: 16.0  # 目標位置へのアラインメントを滑らかにする(元24.0) 
-      GoalAlign.forward_point_distance: 0.1
+      BaseObstacle.scale: 0.02  # 0.05 # 障害物回避の感度を増加させ、障害物に対してより敏感に反応する。 
+      PathAlign.scale: 20.0 #32
+      PathAlign.forward_point_distance: 0.1 #0.1
+      GoalAlign.scale: 12.0  #16.0 目標位置へのアラインメントを滑らかにする(元24.0) 
+      GoalAlign.forward_point_distance: 0.1 #0.1
       PathDist.scale: 32.0
       GoalDist.scale: 24.0
-      RotateToGoal.scale: 20.0 # 32.0 # 回転時の急激な動きを抑える
+      RotateToGoal.scale: 10.0 # 20.0 # 回転時の急激な動きを抑える
       RotateToGoal.slowing_factor: 5.0
       RotateToGoal.lookahead_time: -1.0
       
@@ -168,27 +168,41 @@ controller_server_rclcpp_node:
 local_costmap:
   local_costmap:
     ros__parameters:
-      update_frequency: 5.0
-      publish_frequency: 2.0
+      update_frequency: 20.0 #10
+      publish_frequency: 4.0
       global_frame: odom
       robot_base_frame: base_link
       use_sim_time: False
       rolling_window: true
-      width: 3
-      height: 3
+      width: 6
+      height: 6
       resolution: 0.05
-      robot_radius: 0.28  # 0.1 # ロボットの半径を0.75に修正。WHILLの縦の長さは0.9
+      # ロボットの当たり判定
+      # 当たり判定は厳密に設定し，obstacle_min_range, raytrace_min_range で誤差許容範囲の設定をする．
+      # robot_radius: 0.6 # 円
+      footprint: "[[0.60, 0.250],
+                  [0.60, 0.15],
+                  [0.80, 0.15],
+                  [0.80, -0.15],
+                  [0.60, -0.15],
+                  [0.60, -0.250],
+                  [-0.2225, -0.250],
+                  [-0.2225, 0.250]]" # 四角の当たり判定
+      # footprint: "[[0.7525, 0.250],
+      #             [0.7525, -0.250],
+      #             [-0.2225, -0.250],
+      #             [-0.2225, 0.250]]" # 四角の当たり判定
       plugins: ["obstacle_layer", "voxel_layer", "inflation_layer"]
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
-        inflation_radius: 1.0 #1.0 # WHILLに合わせて少し広めに設定、障害物との衝突回避のため。
-        cost_scaling_factor: 3.0
+        inflation_radius: 0.3 #0.3 # WHILLに合わせて少し広めに設定、障害物との衝突回避のため。
+        cost_scaling_factor: 7.0 # 壁からの距離と危険度
       obstacle_layer:
         plugin: "nav2_costmap_2d::ObstacleLayer"
         enabled: True
         observation_sources: scan
         scan:
-          topic: /scan
+          topic: /scan # フィルタ後のデータを利用する 
           max_obstacle_height: 2.0
           clearing: True
           marking: True
@@ -211,7 +225,7 @@ local_costmap:
           data_type: "LaserScan"
           raytrace_max_range: 3.0
           raytrace_min_range: 0.0
-          obstacle_max_range: 2.5 # 障害物の検出範囲。ロボットが大きいので、障害物検出範囲を広げる必要がある。
+          obstacle_max_range: 2.0 #2.5 障害物の検出範囲。ロボットが大きいので、障害物検出範囲を広げる必要がある。
           obstacle_min_range: 0.0
       static_layer:
         map_subscribe_transient_local: True
@@ -226,12 +240,26 @@ local_costmap:
 global_costmap:
   global_costmap:
     ros__parameters:
-      update_frequency: 1.0
-      publish_frequency: 1.0
+      update_frequency: 20.0 #2
+      publish_frequency: 2.0
       global_frame: map
       robot_base_frame: base_link
-      use_sim_time: True
-      robot_radius: 0.1
+      use_sim_time:  False #True
+      # ロボットの当たり判定
+      # robot_radius: 0.2 # 円
+      footprint: "[[0.60, 0.250],
+                  [0.60, 0.15],
+                  [0.80, 0.15],
+                  [0.80, -0.15],
+                  [0.60, -0.15],
+                  [0.60, -0.250],
+                  [-0.2225, -0.250],
+                  [-0.2225, 0.250]]" # 四角の当たり判定
+      # footprint: "[[0.7525, 0.250],
+      #             [0.7525, -0.250],
+      #             [-0.2225, -0.250],
+      #             [-0.2225, 0.250]]" # 四角の当たり判定
+                  
       resolution: 0.05
       track_unknown_space: true
       plugins: ["static_layer", "obstacle_layer", "voxel_layer", "inflation_layer"]
@@ -240,7 +268,7 @@ global_costmap:
         enabled: True
         observation_sources: scan
         scan:
-          topic: /scan
+          topic: /scan # フィルタ後のデータを使う
           max_obstacle_height: 2.0
           clearing: True
           marking: True
@@ -274,8 +302,8 @@ global_costmap:
         map_subscribe_transient_local: True
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
-        cost_scaling_factor: 3.0
-        inflation_radius: 0.55
+        cost_scaling_factor: 5.0
+        inflation_radius: 0.5 #1.0
       always_send_full_costmap: True
   global_costmap_client:
     ros__parameters:
@@ -299,7 +327,7 @@ map_saver:
 
 planner_server:
   ros__parameters:
-    expected_planner_frequency: 20.0
+    expected_planner_frequency: 30.0 #20
     use_sim_time: False
     planner_plugins: ["GridBased"]
     GridBased:
@@ -327,7 +355,7 @@ recoveries_server:
     global_frame: odom
     robot_base_frame: base_link
     transform_timeout: 0.1
-    use_sim_time: true
+    use_sim_time: False #True
     simulate_ahead_time: 2.0
     max_rotational_vel: 1.0
     min_rotational_vel: 0.4
