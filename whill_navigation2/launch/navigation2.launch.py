@@ -71,12 +71,12 @@ def generate_launch_description():
             output='log',
             arguments=['0.0', '0.0', '0.0', '0.0', '0.0', '0.0', 'map', 'odom'],
             remappings=[('/odom', '/whill/odom')]),
-        #laserトピックの設定
-        Node(package='tf2_ros',
-            executable='static_transform_publisher',
-            name='static_transform_publisher',
-            output='log',
-            arguments=['0.0', '0.0', '0.0', '0.0', '0.0', '0.0', 'base_link', 'laser']),
+        # #laserトピックの設定
+        # Node(package='tf2_ros',
+        #     executable='static_transform_publisher',
+        #     name='static_transform_publisher',
+        #     output='log',
+        #     arguments=['0.0', '0.0', '0.0', '0.0', '0.0', '0.0', 'base_link', 'laser']),
 
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource([nav2_launch_file_dir, '/bringup_launch.py']),
